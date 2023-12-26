@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="12.0.1" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+    <PackageReference Include="Farsiman.Application.Core.Standard" Version="3.0.1" />
+    <PackageReference Include="Farsiman.AuthServer.Extensions" Version="1.0.35371" />
+    <PackageReference Include="Farsiman.Extensions.Configuration" Version="2.29723.0" />
+    <PackageReference Include="Farsiman.Infraestructure.Core.Entity.Standard" Version="8.0.60115" />
+    <PackageReference Include="FluentValidation" Version="11.9.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Controllers\" />
+    <Folder Include="Utility\" />
+    <Folder Include="_Common\" />
+    <Folder Include="_Features\Departamentos\" />
+    <Folder Include="_Features\Empleados\" />
+    <Folder Include="_Features\EstadosCiviles\" />
+    <Folder Include="_Features\EstadoEnvios\" />
+    <Folder Include="_Features\Lotes\" />
+    <Folder Include="_Features\Municipios\" />
+    <Folder Include="_Features\Pantallas\" />
+    <Folder Include="_Features\PantallasPorRol\" />
+    <Folder Include="_Features\Productos\" />
+    <Folder Include="_Features\Roles\" />
+    <Folder Include="_Features\Salidas\" />
+    <Folder Include="_Features\SalidasDetalles\" />
+    <Folder Include="_Features\Sucursales\" />
+    <Folder Include="_Features\Usuarios\" />
+  </ItemGroup>
+
+</Project>
