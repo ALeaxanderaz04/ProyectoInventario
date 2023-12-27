@@ -15,7 +15,8 @@ namespace AcademiaFs.ProyectoInventario.WebApi.Infrastructure.Inventario.Maps
             entity.HasIndex(e => e.NombreUsuario, "UQ_dbo_Usuarios_NombreUsuario").IsUnique();
 
             entity.Property(e => e.Activo).HasDefaultValue(true);
-            entity.Property(e => e.Contrasena).HasMaxLength(1);
+            entity.Property(e => e.Contrasena).HasMaxLength(100)
+                .IsUnicode(false);
             entity.Property(e => e.FechaCreacion).HasColumnType("datetime");
             entity.Property(e => e.FechaModificacion).HasColumnType("datetime");
             entity.Property(e => e.NombreUsuario)

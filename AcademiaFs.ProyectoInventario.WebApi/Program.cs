@@ -1,4 +1,8 @@
+using AcademiaFs.ProyectoInventario.WebApi._Features.Login;
+using AcademiaFs.ProyectoInventario.WebApi._Features.Lotes;
+using AcademiaFs.ProyectoInventario.WebApi._Features.Usuarios;
 using AcademiaFs.ProyectoInventario.WebApi.Infrastructure.Inventario;
+using AcademiaFs.ProyectoInventario.WebApi.Utility;
 using Farsiman.Domain.Core.Standard;
 using Farsiman.Extensions.Configuration;
 using Farsiman.Infraestructure.Core.Entity.Standard;
@@ -18,18 +22,19 @@ builder.Services.AddCors(options =>
 
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerForFsIdentityServer(opt =>
-{
-    opt.Title = "Prueba";
-    opt.Description = "Descripcion";
-    opt.Version = "v1.0";
-});
+builder.Services.AddSwaggerGen();
+//builder.Services.AddSwaggerForFsIdentityServer(opt =>
+//{
+//    opt.Title = "Prueba";
+//    opt.Description = "Descripcion";
+//    opt.Version = "v1.0";
+//});
 
-builder.Services.AddFsAuthService(configureOptions =>
-{
-    configureOptions.Username = builder.Configuration.GetFromENV("Configurations:FsIdentityServer:Username");
-    configureOptions.Password = builder.Configuration.GetFromENV("Configurations:FsIdentityServer:Password");
-});
+//builder.Services.AddFsAuthService(configureOptions =>
+//{
+//    configureOptions.Username = builder.Configuration.GetFromENV("Configurations:FsIdentityServer:Username");
+//    configureOptions.Password = builder.Configuration.GetFromENV("Configurations:FsIdentityServer:Password");
+//});
 
 var connectionString = builder.Configuration.GetConnectionString("EFCoreTransporte");
 builder.Services.AddDbContext<InventarioCaazContext>(opciones => opciones.UseSqlServer(connectionString));
@@ -38,11 +43,17 @@ builder.Services.AddTransient<UnitOfworkBuilder, UnitOfworkBuilder>();
 
 builder.Services.AddAutoMapper(typeof(MapProfile));
 
+/* Inyectar los Servicios */
+builder.Services.AddTransient<UsuarioService>();
+builder.Services.AddTransient<ExistenciaDatos>();
+builder.Services.AddTransient<LoginService>();
+builder.Services.AddTransient<LoteService>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwaggerWithFsIdentityServer();
+    app.UseSwagger();
     app.UseSwaggerUI();
 }
 

@@ -25,7 +25,7 @@ public partial class Lote
 
     public DateTime? FechaModificacion { get; set; }
 
-    public bool? Activo { get; set; }
+    public bool Activo { get; set; }
 
     public virtual Producto IdProductoNavigation { get; set; } = null!;
 
