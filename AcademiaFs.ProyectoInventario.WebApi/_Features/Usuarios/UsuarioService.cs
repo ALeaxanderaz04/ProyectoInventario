@@ -4,6 +4,7 @@ using AcademiaFs.ProyectoInventario.WebApi.Infrastructure.Inventario;
 using AcademiaFs.ProyectoInventario.WebApi.Infrastructure.Inventario.Entities;
 using AcademiaFs.ProyectoInventario.WebApi.Utility;
 using AcademiaFS.ProyectoTransporte._Common;
+using AcademiaFS.ProyectoTransporte._Features.Login;
 using AcademiaFS.ProyectoTransporte.Utility;
 using AutoMapper;
 using Farsiman.Application.Core.Standard.DTOs;
@@ -61,6 +62,9 @@ namespace AcademiaFs.ProyectoInventario.WebApi._Features.Usuarios
 
         public Respuesta<UsuarioDto> InsertarUsuario(UsuarioDto usuario)
         {
+            if (DatosSesion.UsuarioLogueadoId == 0){
+                return Respuesta.Fault<UsuarioDto>(MensajesAcciones.INVALIDO_INICIO_SESION, CodigosGlobales.ERROR);
+            }
             _unitOfWork.BeginTransaction();
             try
             {
@@ -76,7 +80,7 @@ namespace AcademiaFs.ProyectoInventario.WebApi._Features.Usuarios
 
                 usuario.IdUsuario                      = usuarioMapeado.IdUsuario;
                 usuario.Contrasena                     = "**************";
-                usuarioMapeado.IdUsuarioCreacion       = 1;
+                usuarioMapeado.IdUsuarioCreacion       = DatosSesion.UsuarioLogueadoId;
                 usuarioMapeado.FechaCreacion           = DateTime.Now;
                 usuarioMapeado.IdUsuarioModificacion   = null;
                 usuarioMapeado.FechaModificacion       = null;
@@ -86,12 +90,12 @@ namespace AcademiaFs.ProyectoInventario.WebApi._Features.Usuarios
                 _unitOfWork.SaveChanges();
                 _unitOfWork.Commit();
 
-                return Respuesta.Success(usuario, MensajesAccionesInvalidas.EXITO_INSERTAR, CodigosGlobales.EXITO);
+                return Respuesta.Success(usuario, MensajesAcciones.EXITO_INSERTAR, CodigosGlobales.EXITO);
             }
             catch (Exception)
             {
                 _unitOfWork.RollBack();
-                return Respuesta<UsuarioDto>.Fault(MensajesAccionesInvalidas.ERROR);
+                return Respuesta<UsuarioDto>.Fault(MensajesAcciones.ERROR);
             }
         }
 

@@ -1,11 +1,12 @@
 using AcademiaFs.ProyectoInventario.WebApi._Features.Login;
 using AcademiaFs.ProyectoInventario.WebApi._Features.Lotes;
+using AcademiaFs.ProyectoInventario.WebApi._Features.Municipios;
+using AcademiaFs.ProyectoInventario.WebApi._Features.Productos;
+using AcademiaFs.ProyectoInventario.WebApi._Features.Salidas;
+using AcademiaFs.ProyectoInventario.WebApi._Features.Sucursales;
 using AcademiaFs.ProyectoInventario.WebApi._Features.Usuarios;
 using AcademiaFs.ProyectoInventario.WebApi.Infrastructure.Inventario;
 using AcademiaFs.ProyectoInventario.WebApi.Utility;
-using Farsiman.Domain.Core.Standard;
-using Farsiman.Extensions.Configuration;
-using Farsiman.Infraestructure.Core.Entity.Standard;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -47,7 +48,18 @@ builder.Services.AddAutoMapper(typeof(MapProfile));
 builder.Services.AddTransient<UsuarioService>();
 builder.Services.AddTransient<ExistenciaDatos>();
 builder.Services.AddTransient<LoginService>();
-builder.Services.AddTransient<LoteService>();
+builder.Services.AddTransient<LoteAppService>();
+builder.Services.AddTransient<ProductoAppService>();
+builder.Services.AddTransient<SucursalAppService>();
+builder.Services.AddTransient<SalidaAppService>();
+
+/* Inyectar los Dominios */
+builder.Services.AddTransient<SucursalDomainService>();
+builder.Services.AddTransient<MunicipioDomainService>();
+builder.Services.AddTransient<LoteDomainService>();
+builder.Services.AddTransient<ProductoDomainService>();
+builder.Services.AddTransient<SalidaDomainService>();
+
 
 var app = builder.Build();
 

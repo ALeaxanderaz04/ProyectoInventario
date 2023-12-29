@@ -1,31 +1,29 @@
 ﻿using AcademiaFs.ProyectoInventario.WebApi._Common;
 using AcademiaFs.ProyectoInventario.WebApi._Features.Lotes.Dto;
-using AcademiaFs.ProyectoInventario.WebApi._Features.Usuarios;
-using AcademiaFs.ProyectoInventario.WebApi._Features.Usuarios.Dto;
+using AcademiaFs.ProyectoInventario.WebApi._Features.Productos.Dto;
 using AcademiaFs.ProyectoInventario.WebApi.Infrastructure.Inventario;
 using AcademiaFs.ProyectoInventario.WebApi.Infrastructure.Inventario.Entities;
-using AcademiaFs.ProyectoInventario.WebApi.Utility;
 using AcademiaFS.ProyectoTransporte._Common;
+using AcademiaFS.ProyectoTransporte._Features.Login;
 using AutoMapper;
 using Farsiman.Application.Core.Standard.DTOs;
 using Farsiman.Domain.Core.Standard.Repositories;
-using System;
 
 namespace AcademiaFs.ProyectoInventario.WebApi._Features.Lotes
 {
-    public class LoteService
+    public class LoteAppService : ILoteAppServicecs
     {
         private readonly IUnitOfWork _unitOfWork;
         readonly IMapper _mapper;
-        private readonly ExistenciaDatos _existenciaDatos;
+        private readonly LoteDomainService _loteDomainService;
 
-        public LoteService(IMapper mapper,
-                                UnitOfworkBuilder unitOfWorkBuilder,
-                                ExistenciaDatos existenciaDatos)
+        public LoteAppService(IMapper mapper,
+                            UnitOfworkBuilder unitOfWorkBuilder,
+                            LoteDomainService loteDomainService)
         {
             _mapper = mapper;
             _unitOfWork = unitOfWorkBuilder.BuilderDB01();
-            _existenciaDatos  = existenciaDatos;
+            _loteDomainService=loteDomainService;
         }
 
         public Respuesta<List<LoteListadoDto>> ListadoLotes()
@@ -60,21 +58,25 @@ namespace AcademiaFs.ProyectoInventario.WebApi._Features.Lotes
             return Respuesta.Success(resultado, "", CodigosGlobales.EXITO);
         }
 
-
         public Respuesta<LoteDto> InsertarLote(LoteDto lote)
-        {
-            _unitOfWork.BeginTransaction();
+        { 
+            if (DatosSesion.UsuarioLogueadoId == 0)
+                return Respuesta.Fault<LoteDto>(MensajesAcciones.INVALIDO_INICIO_SESION, CodigosGlobales.ERROR);
+            
             try
             {
-                string llavesForaneasValidas = ValidarInsertarLlavesForaneas(lote);
-                if (llavesForaneasValidas.Contains("Advertencia"))
-                {
-                    return Respuesta.Fault<LoteDto>(llavesForaneasValidas, CodigosGlobales.ADVERTENCIA);
-                }
+                lote.IdLote = (int)ValoresDefecto.IdIngreso;
+
+                var productos = _unitOfWork.Repository<Producto>().AsQueryable().Where(e => e.Activo).ToList();
+                Respuesta<bool> loteValido = _loteDomainService.EsLoteValidoInsertar(productos, lote.IdProducto);
+
+                if (!loteValido.Ok)
+                    return Respuesta.Fault<LoteDto>(loteValido.Mensaje, CodigosGlobales.ADVERTENCIA);
 
                 var loteMapeado = _mapper.Map<Lote>(lote);
 
-                loteMapeado.IdUsuarioCreacion       = 1;
+                loteMapeado.CantidadActual          = lote.CantidadIngresada;
+                loteMapeado.IdUsuarioCreacion       = DatosSesion.UsuarioLogueadoId;
                 loteMapeado.FechaCreacion           = DateTime.Now;
                 loteMapeado.IdUsuarioModificacion   = null;
                 loteMapeado.FechaModificacion       = null;
@@ -82,95 +84,75 @@ namespace AcademiaFs.ProyectoInventario.WebApi._Features.Lotes
 
                 _unitOfWork.Repository<Lote>().Add(loteMapeado);
                 _unitOfWork.SaveChanges();
-                _unitOfWork.Commit();
 
-                return Respuesta.Success(lote, MensajesAccionesInvalidas.EXITO_INSERTAR, CodigosGlobales.EXITO);
+                return Respuesta.Success(lote, MensajesAcciones.EXITO_INSERTAR, CodigosGlobales.EXITO);
             }
             catch (Exception)
             {
-                _unitOfWork.RollBack();
-                return Respuesta<LoteDto>.Fault(MensajesAccionesInvalidas.ERROR);
+                return Respuesta<LoteDto>.Fault(MensajesAcciones.ERROR);
             }
         }
 
         public Respuesta<LoteDto> EditarLote(LoteDto lote)
         {
-            _unitOfWork.BeginTransaction();
+            if (DatosSesion.UsuarioLogueadoId == 0)
+                return Respuesta.Fault<LoteDto>(MensajesAcciones.INVALIDO_INICIO_SESION, CodigosGlobales.ERROR);
+
             try
             {
-                string llavesForaneasValidas = ValidarEditarLlavesForaneas(lote);
-                if (llavesForaneasValidas.Contains("Advertencia")) {
-                    return Respuesta.Fault<LoteDto>(llavesForaneasValidas, CodigosGlobales.ADVERTENCIA);
+                var productos = _unitOfWork.Repository<Producto>().AsQueryable().Where(e => e.Activo).ToList();
+                var lotes = _unitOfWork.Repository<Lote>().AsQueryable().Where(e => e.Activo).ToList();
+
+                Respuesta<bool> loteValido = _loteDomainService.EsloteValidoEditar(productos, lote.IdProducto, lotes , lote.IdLote);
+                if (!loteValido.Ok) {
+                    return Respuesta.Fault<LoteDto>(loteValido.Mensaje, CodigosGlobales.ADVERTENCIA);
                 }
 
                 var loteEditado = _unitOfWork.Repository<Lote>().FirstOrDefault(x => x.IdLote == lote.IdLote);
 
-                loteEditado.IdProducto = lote.IdProducto;
-                loteEditado.CantidadIngresada = lote.CantidadIngresada;
-                loteEditado.CostoUnidad = lote.CostoUnidad;
-                loteEditado.FechaVencimiento = lote.FechaVencimiento;
-                loteEditado.FechaModificacion = DateTime.Now;
-                loteEditado.IdUsuarioModificacion = 1;
-
+                if(loteEditado != null) {
+                    loteEditado.IdProducto              = lote.IdProducto;
+                    loteEditado.CantidadIngresada       = lote.CantidadIngresada;
+                    loteEditado.CostoUnidad             = lote.CostoUnidad;
+                    loteEditado.FechaVencimiento        = lote.FechaVencimiento;
+                    loteEditado.FechaModificacion       = DateTime.Now;
+                    loteEditado.IdUsuarioModificacion   = DatosSesion.UsuarioLogueadoId;
+                }
+                
                 _unitOfWork.SaveChanges();
-                _unitOfWork.Commit();
-                return Respuesta.Success(lote, MensajesAccionesInvalidas.EXITO_EDITAR, CodigosGlobales.EXITO);
+                return Respuesta.Success(lote, MensajesAcciones.EXITO_EDITAR, CodigosGlobales.EXITO);
             }
             catch 
             {
-                _unitOfWork.RollBack();
-                return Respuesta<LoteDto>.Fault(MensajesAccionesInvalidas.ERROR);
+                return Respuesta<LoteDto>.Fault(MensajesAcciones.ERROR);
             }
         }
 
         public Respuesta<LoteDto> EliminarLote(LoteDto lote)
         {
-            _unitOfWork.BeginTransaction();
+            if (DatosSesion.UsuarioLogueadoId == 0)
+                return Respuesta.Fault<LoteDto>(MensajesAcciones.INVALIDO_INICIO_SESION, CodigosGlobales.ERROR);
+
             try
             {
-                bool loteExiste = _existenciaDatos.ValidarLoteExiste(lote.IdLote);
-                if (!loteExiste){
-                    return Respuesta.Success(lote, MensajesCamposInvalidos.IdNoEncontrado("lote"), CodigosGlobales.EXITO);
-                }
+                var loteEliminado = _unitOfWork.Repository<Lote>().FirstOrDefault(x => x.IdLote == lote.IdLote);
 
-                var loteEditado = _unitOfWork.Repository<Lote>().FirstOrDefault(x => x.IdLote == lote.IdLote);
-
-                loteEditado.Activo = false;
+                if (loteEliminado != null)
+                    loteEliminado.Activo = false;
+                else
+                    Respuesta.Fault<LoteDto>(MensajesCamposInvalidos.IdNoEncontrado("lote"), CodigosGlobales.ADVERTENCIA);
 
                 _unitOfWork.SaveChanges();
-                _unitOfWork.Commit();
-                return Respuesta.Success(lote, MensajesAccionesInvalidas.EXITO_EDITAR, CodigosGlobales.EXITO);
+                return Respuesta.Success(lote, MensajesAcciones.EXITO_ELIMINAR, CodigosGlobales.EXITO);
             }
             catch
             {
-                _unitOfWork.RollBack();
-                return Respuesta<LoteDto>.Fault(MensajesAccionesInvalidas.ERROR);
+                return Respuesta<LoteDto>.Fault(MensajesAcciones.ERROR);
             }
         }
 
-        public string ValidarInsertarLlavesForaneas(LoteDto lote)
-        {
-            bool productoExiste = _existenciaDatos.ValidarProductoExiste(lote.IdProducto);
-            if (!productoExiste){
-                return MensajesCamposInvalidos.IdNoEncontrado("Producto");
-            }
-            return string.Empty;
-        }
+       
 
-        public string ValidarEditarLlavesForaneas(LoteDto lote)
-        {
-            bool loteExiste = _existenciaDatos.ValidarLoteExiste(lote.IdLote);
-            if (!loteExiste)
-            {
-                return MensajesCamposInvalidos.IdNoEncontrado("lote");
-            }
-
-            bool productoExiste = _existenciaDatos.ValidarProductoExiste(lote.IdProducto);
-            if (!productoExiste)
-            {
-                return MensajesCamposInvalidos.IdNoEncontrado("producto");
-            }
-            return string.Empty;
-        }
+        
     }
 }

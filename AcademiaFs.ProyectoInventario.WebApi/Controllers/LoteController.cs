@@ -11,8 +11,8 @@ namespace AcademiaFs.ProyectoInventario.WebApi.Controllers
     [ApiController]
     public class LoteController : ControllerBase
     {
-        public readonly LoteService _sevice;
-        public LoteController(LoteService lote)
+        public readonly LoteAppService _sevice;
+        public LoteController(LoteAppService lote)
         {
             _sevice = lote;
         }

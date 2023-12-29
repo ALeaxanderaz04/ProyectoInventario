@@ -58,5 +58,18 @@ namespace AcademiaFs.ProyectoInventario.WebApi.Utility
             }
             return false;
         }
+
+        public bool ValidarMunicipioExiste(string idMunicipio)
+        {
+            var municipios = _unitOfWork.Repository<Municipio>().AsQueryable();
+            var municicioExiste = municipios.FirstOrDefault(e => e.IdMunicipio == idMunicipio);
+
+            if (municicioExiste != null)
+            {
+                return true;
+            }
+            return false;
+        }
+
     }
 }

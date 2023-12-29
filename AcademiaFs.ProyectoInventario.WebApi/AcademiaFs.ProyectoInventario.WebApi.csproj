@@ -33,14 +33,10 @@
     <Folder Include="_Features\Empleados\" />
     <Folder Include="_Features\EstadosCiviles\" />
     <Folder Include="_Features\EstadoEnvios\" />
-    <Folder Include="_Features\Municipios\" />
     <Folder Include="_Features\Pantallas\" />
     <Folder Include="_Features\PantallasPorRol\" />
-    <Folder Include="_Features\Productos\" />
     <Folder Include="_Features\Roles\" />
-    <Folder Include="_Features\Salidas\" />
     <Folder Include="_Features\SalidasDetalles\" />
-    <Folder Include="_Features\Sucursales\" />
   </ItemGroup>
 
 </Project>

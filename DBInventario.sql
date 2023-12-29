@@ -219,6 +219,7 @@ IdSalida				INT IDENTITY (1,1),
 IdSucursal				INT				NOT NULL,
 FechaSalida				DATETIME		NOT NULL,
 Total					DECIMAL(18,2)	NOT NULL,
+IdEstadoEnvio			INT				NOT NULL,
 FechaRecibido			DATETIME		NULL,
 IdUsuarioRecibe			INT				NULL,
 IdUsuarioCreacion		INT             NOT NULL,
@@ -229,6 +230,7 @@ Activo					BIT             CONSTRAINT DF_dbo_Salidas_Activo DEFAULT (1)
 
 CONSTRAINT PK_dbo_Salidas_IdSalida									PRIMARY KEY(IdSalida),
 CONSTRAINT FK_dbo_Salidas_dbo_Sucursales_IdSucursal					FOREIGN KEY(IdSucursal)					REFERENCES Sucursales(IdSucursal),
+CONSTRAINT FK_dbo_Salidas_dbo_EstadoEnvios_IdEstadoEnvio			FOREIGN KEY(IdEstadoEnvio)				REFERENCES EstadoEnvios(IdEstadoEnvio),
 CONSTRAINT FK_dbo_Salidas_dbo_Usuarios_IdUsuarioRecibe				FOREIGN KEY(IdUsuarioRecibe)			REFERENCES Usuarios(IdUsuario),
 CONSTRAINT FK_dbo_Salidas_dbo_Usuarios_IdUsuarioCreacion			FOREIGN KEY(IdUsuarioCreacion)			REFERENCES Usuarios(IdUsuario),
 CONSTRAINT FK_dbo_Salidas_dbo_Usuarios_IdUsuarioModificacion		FOREIGN KEY(IdUsuarioModificacion)		REFERENCES Usuarios(IdUsuario)

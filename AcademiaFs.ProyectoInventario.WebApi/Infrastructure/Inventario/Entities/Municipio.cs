@@ -19,7 +19,7 @@ public partial class Municipio
 
     public DateTime? FechaModificacion { get; set; }
 
-    public bool? Activo { get; set; }
+    public bool Activo { get; set; }
 
     public virtual ICollection<Empleado> Empleados { get; set; } = new List<Empleado>();
 

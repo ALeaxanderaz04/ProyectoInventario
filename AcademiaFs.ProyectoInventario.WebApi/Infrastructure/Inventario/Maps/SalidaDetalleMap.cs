@@ -10,9 +10,9 @@ namespace AcademiaFs.ProyectoInventario.WebApi.Infrastructure.Inventario.Maps
         {
             entity.ToTable("SalidasDetalle");
 
-            entity.HasKey(e => e.IdSalida).HasName("PK_dbo_SalidasDetalles_IdSalidaDetalle");
+            entity.HasKey(e => e.IdSalidaDetalle).HasName("PK_dbo_SalidasDetalles_IdSalidaDetalle");
 
-            entity.Property(e => e.IdSalida).ValueGeneratedNever();
+            entity.Property(e => e.IdSalida);
             entity.Property(e => e.Activo).HasDefaultValue(true);
             entity.Property(e => e.FechaCreacion).HasColumnType("datetime");
             entity.Property(e => e.FechaModificacion).HasColumnType("datetime");

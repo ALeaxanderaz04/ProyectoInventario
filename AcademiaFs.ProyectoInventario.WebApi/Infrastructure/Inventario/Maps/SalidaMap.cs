@@ -19,6 +19,11 @@ namespace AcademiaFs.ProyectoInventario.WebApi.Infrastructure.Inventario.Maps
             entity.Property(e => e.FechaSalida).HasColumnType("datetime");
             entity.Property(e => e.Total).HasColumnType("decimal(18, 2)");
 
+            entity.HasOne(d => d.IdEstadoEnvioNavigation).WithMany(p => p.Salida)
+                .HasForeignKey(d => d.IdEstadoEnvio)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_dbo_Salidas_dbo_EstadoEnvios_IdEstadoEnvio");
+
             entity.HasOne(d => d.IdSucursalNavigation).WithMany(p => p.Salida)
                 .HasForeignKey(d => d.IdSucursal)
                 .OnDelete(DeleteBehavior.ClientSetNull)
