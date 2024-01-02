@@ -12,11 +12,16 @@ namespace AcademiaFs.ProyectoInventario.WebApi.Infrastructure.Inventario.Maps
 
             entity.HasKey(e => e.IdSalidaDetalle).HasName("PK_dbo_SalidasDetalles_IdSalidaDetalle");
 
-            entity.Property(e => e.IdSalida);
             entity.Property(e => e.Activo).HasDefaultValue(true);
             entity.Property(e => e.FechaCreacion).HasColumnType("datetime");
             entity.Property(e => e.FechaModificacion).HasColumnType("datetime");
             entity.Property(e => e.IdSalidaDetalle).ValueGeneratedOnAdd();
+
+            entity.HasOne(e => e.IdSalidaNavigation).WithMany(p => p.SalidaDetalles)
+                .HasForeignKey(e => e.IdSalida)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_dbo_SalidasDetalles_dbo_Salidas_IdSalida");
+
 
             entity.HasOne(d => d.IdLoteNavigation).WithMany(p => p.SalidasDetalles)
                 .HasForeignKey(d => d.IdLote)

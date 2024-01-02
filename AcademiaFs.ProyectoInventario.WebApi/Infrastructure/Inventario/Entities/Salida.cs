@@ -22,4 +22,6 @@ public partial class Salida
     public virtual Usuario IdUsuarioCreacionNavigation { get; set; } = null!;
     public virtual Usuario? IdUsuarioModificacionNavigation { get; set; }
     public virtual Usuario? IdUsuarioRecibeNavigation { get; set; }
+    public virtual ICollection<SalidaDetalle> SalidaDetalles { get; set; } = new List<SalidaDetalle>();
+
 }

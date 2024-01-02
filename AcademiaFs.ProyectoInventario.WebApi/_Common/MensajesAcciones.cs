@@ -12,7 +12,9 @@
         #endregion
 
         #region Salidas
-        public static string SUCURSAL_EXCEDE_COSTO_ENVIO = "Advertencia! Actualmente, la sucursal ha superado el límite de costos de pedidos.";
+        public static string SUCURSAL_EXCEDE_COSTO_ENVIO        = "Advertencia! Actualmente, la sucursal ha superado el límite de costos de pedidos.";
+        public static string PRODUCTO_SIN_INVENTARIO            = "Advertencia! En la actualidad, este producto no cuenta con lotes disponibles en inventario.";
+        public static string PRODUCTO_INVENTARIO_INSUFICIENTE    = "Advertencia! En la actualidad, este producto no cuenta con stock sufuciente en inventario.";
         #endregion
 
 

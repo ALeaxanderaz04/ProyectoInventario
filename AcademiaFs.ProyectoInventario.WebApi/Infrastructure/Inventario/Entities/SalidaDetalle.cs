@@ -15,6 +15,7 @@ public partial class SalidaDetalle
     public DateTime? FechaModificacion { get; set; }
     public bool? Activo { get; set; }
     public virtual Lote IdLoteNavigation { get; set; } = null!;
+    public virtual Salida IdSalidaNavigation { get; set; } = null!;
     public virtual Usuario IdUsuarioCreacionNavigation { get; set; } = null!;
     public virtual Usuario? IdUsuarioModificacionNavigation { get; set; }
 }

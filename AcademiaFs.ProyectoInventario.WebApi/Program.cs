@@ -2,6 +2,7 @@ using AcademiaFs.ProyectoInventario.WebApi._Features.Login;
 using AcademiaFs.ProyectoInventario.WebApi._Features.Lotes;
 using AcademiaFs.ProyectoInventario.WebApi._Features.Municipios;
 using AcademiaFs.ProyectoInventario.WebApi._Features.Productos;
+using AcademiaFs.ProyectoInventario.WebApi._Features.Reportes;
 using AcademiaFs.ProyectoInventario.WebApi._Features.Salidas;
 using AcademiaFs.ProyectoInventario.WebApi._Features.Sucursales;
 using AcademiaFs.ProyectoInventario.WebApi._Features.Usuarios;
@@ -52,6 +53,7 @@ builder.Services.AddTransient<LoteAppService>();
 builder.Services.AddTransient<ProductoAppService>();
 builder.Services.AddTransient<SucursalAppService>();
 builder.Services.AddTransient<SalidaAppService>();
+builder.Services.AddTransient<ReporteAppService>();
 
 /* Inyectar los Dominios */
 builder.Services.AddTransient<SucursalDomainService>();

@@ -5,6 +5,7 @@ using AcademiaFs.ProyectoInventario.WebApi._Features.Sucursales.Dto;
 using AcademiaFs.ProyectoInventario.WebApi.Infrastructure.Inventario;
 using AcademiaFs.ProyectoInventario.WebApi.Infrastructure.Inventario.Entities;
 using AcademiaFS.ProyectoTransporte._Common;
+using AcademiaFS.ProyectoTransporte._Features.Login;
 using AutoMapper;
 using Farsiman.Application.Core.Standard.DTOs;
 using Farsiman.Domain.Core.Standard.Repositories;
@@ -25,64 +26,6 @@ namespace AcademiaFs.ProyectoInventario.WebApi._Features.Salidas
             _mapper             = mapper;
             _unitOfWork         = unitOfWorkBuilder.BuilderDB01();
             _salidaDomain       = salidaDomain;
-        }
-
-        public Respuesta<SalidaDto> EditarSalida(SalidaDto salida)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Respuesta<SalidaDto> EliminarSalida(SalidaDto salida)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Respuesta<SalidaDto> InsertarSalida(SalidaDto salida)
-        {
-
-            salida.IdSalida = (int)ValoresDefecto.IdIngreso;
-            var sucursales = _unitOfWork.Repository<Sucursal>().AsQueryable().Where(e => e.Activo).ToList();
-            var salidas = ListadoSalidasSinRecibirEnSucursal(salida.IdSucursal);
-
-            Respuesta<bool> esSalidaValida = _salidaDomain.EsSalidaValidaInsertar(sucursales, salida.IdSucursal, salidas);
-            if (!esSalidaValida.Ok)
-                return Respuesta.Fault<SalidaDto>(esSalidaValida.Mensaje, CodigosGlobales.ADVERTENCIA);
-
-            //_unitOfWork.BeginTransaction();
-
-            try
-            {
-                var salidaMepeada = _mapper.Map<Salida>(salida);
-
-                salidaMepeada.Total                 = 0;
-                salidaMepeada.IdEstadoEnvio         = (int)ValoresDefecto.IdEstadoEnviadoSucursal;
-                salidaMepeada.IdUsuarioRecibe       = null;
-                salidaMepeada.FechaRecibido         = null;
-                salidaMepeada.IdUsuarioCreacion     = 1;
-                salidaMepeada.FechaCreacion         = DateTime.Now;
-                salidaMepeada.IdUsuarioModificacion = null;
-                salidaMepeada.FechaModificacion     = null;
-                salidaMepeada.Activo                = true;
-
-                _unitOfWork.Repository<Salida>().Add(salidaMepeada);
-                //_unitOfWork.Commit();
-                _unitOfWork.SaveChanges();
-                
-
-                salida.IdSalida = salidaMepeada.IdSalida;
-
-                Respuesta<bool> InsertarDetalle = InsertarDetalles(salida);
-
-                if(InsertarDetalle.Ok)
-                    return Respuesta.Success(salida, MensajesAcciones.EXITO_INSERTAR, CodigosGlobales.EXITO);
-            }
-            catch (Exception e)
-            {
-                //_unitOfWork.RollBack();
-                throw;
-            }
-
-            throw new NotImplementedException();
         }
 
         public Respuesta<List<SalidaListadoDto>> ListadoSalidas()
@@ -137,7 +80,7 @@ namespace AcademiaFs.ProyectoInventario.WebApi._Features.Salidas
                              }).ToList();
             return Respuesta.Success(respuesta, "", CodigosGlobales.EXITO);
         }
-
+            
         public List<Salida> ListadoSalidasSinRecibirEnSucursal(int IdSucursal)
         {
             var resultado = (from salida in _unitOfWork.Repository<Salida>().AsQueryable()
@@ -175,61 +118,192 @@ namespace AcademiaFs.ProyectoInventario.WebApi._Features.Salidas
             return resultado;
         }
 
+        public Respuesta<SalidaDto> InsertarSalida(SalidaDto salida)
+        {
+            if (DatosSesion.UsuarioLogueadoId == 0)
+                return Respuesta.Fault<SalidaDto>(MensajesAcciones.INVALIDO_INICIO_SESION, CodigosGlobales.ERROR);
+
+            salida.IdSalida = (int)ValoresDefecto.IdIngreso;
+            var sucursales = _unitOfWork.Repository<Sucursal>().AsQueryable().Where(e => e.Activo).ToList();
+            var salidas = ListadoSalidasSinRecibirEnSucursal(salida.IdSucursal);
+
+            Respuesta<bool> esSalidaValida = _salidaDomain.EsSalidaValidaInsertar(sucursales, salida.IdSucursal, salidas);
+            if (!esSalidaValida.Ok)
+                return Respuesta.Fault<SalidaDto>(esSalidaValida.Mensaje, CodigosGlobales.ADVERTENCIA);
+
+            _unitOfWork.BeginTransaction();
+
+            try
+            {
+                var salidaMepeada = _mapper.Map<Salida>(salida);
+
+                salidaMepeada.Total                 = 0;
+                salidaMepeada.IdEstadoEnvio         = (int)ValoresDefecto.IdEstadoEnviadoSucursal;
+                salidaMepeada.IdUsuarioRecibe       = null;
+                salidaMepeada.FechaRecibido         = null;
+                salidaMepeada.IdUsuarioCreacion     = DatosSesion.UsuarioLogueadoId;
+                salidaMepeada.FechaCreacion         = DateTime.Now;
+                salidaMepeada.IdUsuarioModificacion = null;
+                salidaMepeada.FechaModificacion     = null;
+                salidaMepeada.Activo                = true;
+
+                _unitOfWork.Repository<Salida>().Add(salidaMepeada);
+                _unitOfWork.SaveChanges();
+
+
+                salida.IdSalida = salidaMepeada.IdSalida;
+
+                Respuesta<bool> InsertarDetalle = InsertarDetalles(salida);
+                if (!InsertarDetalle.Ok)
+                {
+                    _unitOfWork.RollBack();
+                    return Respuesta.Fault<SalidaDto>(InsertarDetalle.Mensaje, CodigosGlobales.ADVERTENCIA);
+                }
+
+
+                _unitOfWork.Commit();
+                _unitOfWork.SaveChanges();
+
+                Respuesta<bool> totalActualizado = ActualizarTotalSalida(salidaMepeada.IdSalida);
+                return Respuesta.Success(salida, MensajesAcciones.EXITO_INSERTAR, CodigosGlobales.EXITO);
+            }
+            catch (Exception)
+            {
+                _unitOfWork.RollBack();
+                throw;
+            }
+        }
+
         public Respuesta<bool> InsertarDetalles(SalidaDto salida)
         {
             
             foreach (var detalle in salida.SalidaDetalle ?? new List<SalidaDetalleDto>())
             {
-                int cantidadProductoReducida = detalle.CantidadProducto;
+                
                 var lotesProducto = ListadoLotesProductoValidos(detalle.IdProducto);
 
-                foreach (var item in lotesProducto)
-                {
-                    detalle.IdSalidaDetalle = (int)ValoresDefecto.IdIngreso;
+                if(lotesProducto.Count <1)
+                    return Respuesta.Fault<bool>(MensajesAcciones.PRODUCTO_SIN_INVENTARIO, CodigosGlobales.ADVERTENCIA);
 
-                    SalidaDetalle detalleMapeado = new SalidaDetalle();
-                       
 
-                    detalleMapeado.IdSalida                 = salida.IdSalida;
-                    detalleMapeado.IdUsuarioCreacion        = 1;
-                    detalleMapeado.FechaCreacion            = DateTime.Now;
-                    detalleMapeado.IdUsuarioModificacion    = null;
-                    detalleMapeado.FechaModificacion        = null;
-                    detalleMapeado.CantidadProducto=detalle.CantidadProducto;
-                    detalleMapeado.Activo                   = true;
+                SalidaDetalle detalleMapeado = new SalidaDetalle();
+                detalleMapeado.IdSalida                 = salida.IdSalida;
+                detalleMapeado.IdUsuarioCreacion        = DatosSesion.UsuarioLogueadoId;
+                detalleMapeado.FechaCreacion            = DateTime.Now;
+                detalleMapeado.IdUsuarioModificacion    = null;
+                detalleMapeado.FechaModificacion        = null;
+                detalleMapeado.CantidadProducto         = detalle.CantidadProducto;
+                detalleMapeado.Activo                   = true;
 
-                    if (item.CantidadActual - detalle.CantidadProducto < 0)
-                    {
-                        detalle.CantidadProducto -= item.CantidadActual;
-                        var EditarLote = _unitOfWork.Repository<Lote>().FirstOrDefault(e => e.IdLote == item.IdLote);
+                Respuesta<bool> reduccionInventario = ReduccionInventarioLotes(lotesProducto, detalleMapeado);
 
-                        cantidadProductoReducida -= EditarLote.CantidadActual;
-                        EditarLote.CantidadActual = 0;
-                        _unitOfWork.Repository<Lote>().Update(EditarLote);
-
-                        detalleMapeado.IdLote =EditarLote.IdLote;
-                        _unitOfWork.Repository<SalidaDetalle>().Add(detalleMapeado);
-
-                      
-                    }
-                    else
-                    {
-                        var EditarLote = _unitOfWork.Repository<Lote>().FirstOrDefault(e => e.IdLote == item.IdLote);
-
-                        EditarLote.CantidadActual -= cantidadProductoReducida;
-                        _unitOfWork.Repository<Lote>().Update(EditarLote);
-
-                        detalleMapeado.IdLote = EditarLote.IdLote;
-
-                        _unitOfWork.Repository<SalidaDetalle>().Add(detalleMapeado);
-                        break;
-                    }
-                }
+                if(!reduccionInventario.Ok)
+                    return Respuesta.Fault<bool>(reduccionInventario.Mensaje, CodigosGlobales.ADVERTENCIA);
             }
 
+            return Respuesta.Success(true);
+        }
+
+
+
+        public Respuesta<bool> ReduccionInventarioLotes(List<Lote> lotes, SalidaDetalle detalleMapeado)
+        {
+            bool reduccionLotesExitosa = false;
+            int cantidadProductoReducida = detalleMapeado.CantidadProducto;
+            
+
+            foreach (var item in lotes)
+            {
+                detalleMapeado.IdSalidaDetalle = (int)ValoresDefecto.IdIngreso;
+                if (item.CantidadActual - cantidadProductoReducida < 0)
+                {
+                    detalleMapeado.CantidadProducto = item.CantidadActual;
+
+                    Lote EditarLote = _unitOfWork.Repository<Lote>().FirstOrDefault(e => e.IdLote == item.IdLote) ?? new Lote();
+
+                    cantidadProductoReducida -= EditarLote.CantidadActual;
+                    EditarLote.CantidadActual = 0;
+                    _unitOfWork.Repository<Lote>().Update(EditarLote);
+
+                    detalleMapeado.IdLote = EditarLote.IdLote;
+                    _unitOfWork.Repository<SalidaDetalle>().Add(detalleMapeado);
+                }
+                else
+                {
+                    Lote EditarLote = _unitOfWork.Repository<Lote>().FirstOrDefault(e => e.IdLote == item.IdLote)?? new Lote();
+
+                    EditarLote.CantidadActual -= cantidadProductoReducida;
+                    detalleMapeado.CantidadProducto = cantidadProductoReducida;
+
+                    _unitOfWork.Repository<Lote>().Update(EditarLote);
+
+                    detalleMapeado.IdLote = EditarLote.IdLote;
+
+                    _unitOfWork.Repository<SalidaDetalle>().Add(detalleMapeado);
+                    reduccionLotesExitosa = true;
+                    break;
+                }
+                _unitOfWork.SaveChanges();
+            }
+
+            if (!reduccionLotesExitosa)
+                return Respuesta.Fault<bool>(MensajesAcciones.PRODUCTO_INVENTARIO_INSUFICIENTE);
+
+
+            return Respuesta.Success(true);
+        }
+
+        public Respuesta<bool> ActualizarTotalSalida(int IdSalida)
+        {
+            var detallesSalida = _unitOfWork.Repository<SalidaDetalle>().AsQueryable().Where(e => e.IdSalida == IdSalida).ToList(); // Materializar los resultados aquí
+
+            decimal totalCalculado = 0;
+
+            foreach (var item in detallesSalida)
+            {
+                var lote = _unitOfWork.Repository<Lote>().FirstOrDefault(e => e.IdLote == item.IdLote) ?? new Lote();
+
+                totalCalculado += lote.CostoUnidad * item.CantidadProducto;
+            }
+
+            Salida salidaActualizada = _unitOfWork.Repository<Salida>().FirstOrDefault(e => e.IdSalida == IdSalida) ?? new Salida();
+
+            salidaActualizada.Total = totalCalculado;
+            _unitOfWork.Repository<Salida>().Update(salidaActualizada);
             _unitOfWork.SaveChanges();
 
             return Respuesta.Success(true);
         }
+
+        public Respuesta<string> ActualizarEstadoSalidaRecibido(int Idsalida)
+        {
+            if (DatosSesion.UsuarioLogueadoId == 0)
+                return Respuesta.Fault<string>(MensajesAcciones.INVALIDO_INICIO_SESION, CodigosGlobales.ERROR);
+
+            Salida salida = _unitOfWork.Repository<Salida>().FirstOrDefault(e => e.IdSalida == Idsalida) ?? new Salida();
+
+            if(salida == null)
+                return Respuesta.Fault<string>(MensajesCamposInvalidos.IdNoEncontrado("salida"));
+
+            salida.IdEstadoEnvio = (int)ValoresDefecto.IdEstadoRecibidoSucursal;
+            salida.IdUsuarioRecibe = DatosSesion.UsuarioLogueadoId;
+            salida.FechaRecibido = DateTime.Now;
+
+            _unitOfWork.Repository<Salida>().Update(salida);
+            _unitOfWork.SaveChanges();
+
+            return Respuesta.Success(MensajesAcciones.EXITO_EDITAR);
+        }
+
+        public Respuesta<SalidaDto> EditarSalida(SalidaDto salida)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Respuesta<SalidaDto> EliminarSalida(SalidaDto salida)
+        {
+            throw new NotImplementedException();
+        }
     }
+
 }

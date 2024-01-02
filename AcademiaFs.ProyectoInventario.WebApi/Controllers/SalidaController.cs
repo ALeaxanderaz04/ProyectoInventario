@@ -1,4 +1,5 @@
 ﻿using AcademiaFs.ProyectoInventario.WebApi._Features.Productos;
+using AcademiaFs.ProyectoInventario.WebApi._Features.Reportes;
 using AcademiaFs.ProyectoInventario.WebApi._Features.Salidas;
 using AcademiaFs.ProyectoInventario.WebApi._Features.Salidas.Dto;
 using Microsoft.AspNetCore.Http;
@@ -11,9 +12,12 @@ namespace AcademiaFs.ProyectoInventario.WebApi.Controllers
     public class SalidaController : ControllerBase
     {
         public readonly SalidaAppService _sevice;
-        public SalidaController(SalidaAppService salida)
+        public readonly ReporteAppService _reporteSevice;
+        public SalidaController(SalidaAppService salida,
+                                ReporteAppService reporteService)
         {
             _sevice = salida;
+            _reporteSevice = reporteService;
         }
 
         [HttpGet("ListadoSalidas")]
@@ -29,6 +33,21 @@ namespace AcademiaFs.ProyectoInventario.WebApi.Controllers
             var resultado = _sevice.InsertarSalida(item);
             return Ok(resultado);
         }
+
+        [HttpPut("RecibirSalida")]
+        public IActionResult RecibirSalida(int IdSalida)
+        {
+            var resultado = _sevice.ActualizarEstadoSalidaRecibido(IdSalida);
+            return Ok(resultado);
+        }
+
+        [HttpPut("ReporteSalidas")]
+        public IActionResult ReporteListadoSalidas(DateTime fechaInicio, DateTime fechaFin, int IdSucursal)
+        {
+            var resultado = _reporteSevice.ListadoSalidasFiltrado(fechaInicio, fechaFin, IdSucursal);
+            return Ok(resultado);
+        }
+
 
     }
 }

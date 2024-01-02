@@ -238,16 +238,17 @@ CONSTRAINT FK_dbo_Salidas_dbo_Usuarios_IdUsuarioModificacion		FOREIGN KEY(IdUsua
 
 CREATE TABLE SalidasDetalle(
 IdSalidaDetalle			INT IDENTITY(1,1),
-IdSalida				INT NOT NULL,
-IdLote					INT NOT NULL,
-CantidadProducto		INT NOT NULL,
+IdSalida				INT				NOT NULL,
+IdLote					INT				NOT NULL,
+CantidadProducto		INT				NOT NULL,
 IdUsuarioCreacion		INT             NOT NULL,
 FechaCreacion			DATETIME        NOT NULL,
 IdUsuarioModificacion	INT				NULL,
 FechaModificacion		DATETIME		NULL,
 Activo					BIT             CONSTRAINT DF_dbo_SalidasDetalle_Activo DEFAULT (1)
 
-CONSTRAINT PK_dbo_SalidasDetalles_IdSalidaDetalle							PRIMARY KEY(IdSalida),
+CONSTRAINT PK_dbo_SalidasDetalles_IdSalidaDetalle							PRIMARY KEY(IdSalidaDetalle),
+CONSTRAINT FK_dbo_SalidasDetalles_dbo_Salidas_IdSalida						FOREIGN KEY(IdSalida)					REFERENCES Salidas(IdSalida),
 CONSTRAINT FK_dbo_SalidasDetalles_dbo_Lotes_IdLote							FOREIGN KEY(IdLote)						REFERENCES Lotes(IdLote),
 CONSTRAINT FK_dbo_SalidasDetalles_dbo_Usuarios_IdUsuarioCreacion			FOREIGN KEY(IdUsuarioCreacion)			REFERENCES Usuarios(IdUsuario),
 CONSTRAINT FK_dbo_SalidasDetalles_dbo_Usuarios_IdUsuarioModificacion		FOREIGN KEY(IdUsuarioModificacion)		REFERENCES Usuarios(IdUsuario)
